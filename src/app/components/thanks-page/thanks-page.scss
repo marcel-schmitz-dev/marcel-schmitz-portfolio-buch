@@ -1,0 +1,31 @@
+@use '../../../styles/mixins' as m;
+
+:host { display: block; height: 100%; }
+
+.thanks { display: grid; gap: 1em; justify-items: start; align-content: center; height: 100%; padding: 2.4em 2.6em; text-shadow: 0 0 0.8em rgba(0, 0, 0, 0.9); }
+.thanks--right { justify-items: center; align-content: end; padding-bottom: 4.5em; text-align: center; }
+
+.thanks__mono { font: 700 3.4em/1 var(--font-heading); color: var(--color-cyan); }
+.thanks__title { font-size: 2.1em; }
+.thanks__text { color: var(--color-muted); }
+
+.thanks__links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6em 1.4em; }
+.thanks__links a {
+  display: grid;
+  place-items: center;
+  min-width: 2.8em;
+  min-height: 2.8em;
+  color: var(--color-text);
+  @include m.focus-ring;
+  &:hover { color: var(--color-cyan); }
+  svg { width: 1.8em; height: 1.8em; fill: currentColor; }
+}
+.thanks__text-link { text-decoration: underline; }
+
+.thanks__restart {
+  @include m.button-base;
+  border: 1px solid var(--color-cyan);
+  background: rgba(5, 6, 11, 0.6);
+  color: var(--color-cyan);
+  &:hover { box-shadow: var(--glow-cyan); }
+}

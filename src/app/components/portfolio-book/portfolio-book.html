@@ -1,10 +1,10 @@
 @if (bookMode()) {
   <main class="stage" [style.--book-img]="bookImage">
-    <div class="page page--left" [class.page--image]="leftBase() === 0" [class.page--paper]="leftBase() !== 0">
+    <div class="page page--left" [attr.data-bg]="bg(leftBase(), 'left')" [style.--spread-img]="spreadImage(leftBase())" [style.--shade]="spreadShade(leftBase())">
       <app-page-content [spread]="leftBase()" side="left" />
     </div>
-    <div class="page page--right" [class.page--image]="rightBase() === 0" [class.page--paper]="rightBase() !== 0">
-      <app-page-content [spread]="rightBase()" side="right" (more)="goTo(1)" />
+    <div class="page page--right" [attr.data-bg]="bg(rightBase(), 'right')" [style.--spread-img]="spreadImage(rightBase())" [style.--shade]="spreadShade(rightBase())">
+      <app-page-content [spread]="rightBase()" side="right" (navigate)="goTo($event)" />
     </div>
 
     @for (leaf of leaves(); track leaf.key) {
@@ -12,8 +12,9 @@
         class="page leaf"
         [class.page--left]="leaf.side === 'left'"
         [class.page--right]="leaf.side === 'right'"
-        [class.page--image]="leaf.spread === 0"
-        [class.page--paper]="leaf.spread !== 0"
+        [attr.data-bg]="bg(leaf.spread, leaf.side)"
+        [style.--spread-img]="spreadImage(leaf.spread)"
+        [style.--shade]="spreadShade(leaf.spread)"
         [attr.data-anim]="leaf.anim"
         (animationend)="onLeafEnd($event)"
       >
@@ -21,19 +22,37 @@
       </div>
     }
 
-    <app-book-navigation class="nav-layer" [active]="shown()" (select)="goTo($event)" />
+    <app-book-navigation class="nav-layer" [active]="navActive()" (select)="goTo($event)" />
+
+    @if (canPrev()) {
+      <button class="turn turn--prev" type="button" aria-label="Vorherige Seite" (click)="step(-1)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" /></svg>
+      </button>
+    }
+    @if (canNext()) {
+      <button class="turn turn--next" type="button" aria-label="Nächste Seite" (click)="step(1)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
+      </button>
+    }
     <p class="sr-only" role="status">Seite: {{ labels[shown()] }}</p>
   </main>
 } @else {
-  <app-book-navigation class="nav-bar" [active]="shown()" (select)="goTo($event)" />
+  <app-book-navigation class="nav-bar" [active]="navActive()" (select)="goTo($event)" />
   <main class="stack" [style.--book-img]="bookImage">
     @for (i of spreads; track i) {
-      <section class="stack__spread" [id]="'spread-' + i" [attr.aria-label]="labels[i]">
-        <div class="stack__page" [class.stack__page--cover]="i === 0">
+      <section
+        class="stack__spread"
+        [id]="'spread-' + i"
+        [attr.aria-label]="labels[i]"
+        [attr.data-spread]="i"
+        [style.--spread-img]="spreadImage(i)"
+        [style.--shade]="spreadShade(i)"
+      >
+        <div class="stack__page" [attr.data-bg]="bg(i, 'left', true)" data-side="left">
           <app-page-content [spread]="i" side="left" />
         </div>
-        <div class="stack__page">
-          <app-page-content [spread]="i" side="right" (more)="goTo(1)" />
+        <div class="stack__page" [attr.data-bg]="bg(i, 'right', true)" data-side="right">
+          <app-page-content [spread]="i" side="right" (navigate)="goTo($event)" />
         </div>
       </section>
     }

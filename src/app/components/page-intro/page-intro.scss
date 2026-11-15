@@ -2,7 +2,7 @@
 
 :host { display: block; height: 100%; }
 
-.intro { display: grid; gap: 1em; align-content: center; height: 100%; padding: 2.4em 2.6em 3em 2.4em; }
+.intro { text-shadow: 0 0 0.8em rgba(0, 0, 0, 0.9); display: grid; gap: 1em; align-content: center; height: 100%; padding: 2.4em 2.6em 3em 2.4em; }
 
 .intro__title {
   padding-bottom: 0.4em;

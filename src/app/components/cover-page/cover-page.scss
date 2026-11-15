@@ -1,13 +1,33 @@
+@use '../../../styles/mixins' as m;
+
 :host { display: block; height: 100%; }
 
 .cover {
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
-  padding: 2.4em 2.4em 3em;
-  text-shadow: 0 0 0.8em rgba(0, 0, 0, 0.9);
+  padding: 2.4em 2.2em 3em;
+  overflow: hidden;
 }
+
+// Das Portrait sitzt unten auf der Seite und blendet oben und an den Seiten in den Nebel des Buchs
+.cover__portrait {
+  position: absolute;
+  bottom: 0;
+  left: -16%;
+  width: 120%;
+  max-width: none;
+  height: auto;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 24%), linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent 100%);
+  mask-composite: intersect;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 24%), linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent 100%);
+  -webkit-mask-composite: source-in;
+}
+
+.cover__brand, .cover__welcome { position: relative; text-shadow: 0 0 0.8em rgba(0, 0, 0, 0.9); }
 
 .cover__brand { display: flex; align-items: flex-start; gap: 0.8em; }
 .cover__mono { font: 700 2.6em/1 var(--font-heading); color: var(--color-cyan); }

@@ -3,23 +3,35 @@
 :host { display: block; padding: clamp(8px, 1.5vw, 24px); }
 
 // ---------------------------------------------------------------------------
-// Buch (ab 1100 px): Das Bild liefert Rahmen, Portrait und Schreibtisch.
-// Die Seitenflächen sind Anteile der Bildgröße. Sitzt eine Seite nicht exakt
-// auf dem Bild, genügt es, diese Werte anzupassen (0 bis 1).
+// Buch (ab 1100 px): Das Bild liefert Rahmen, Nebel links und Schreibtisch rechts.
+// Die Seitenflächen sind Anteile der Bildgröße (0 bis 1). Sitzt eine Seite nicht
+// exakt auf dem Bild, genügt es, diese Werte anzupassen.
 // ---------------------------------------------------------------------------
 .stage {
-  --lx: 0.086; --lw: 0.284;   // linke Seite: Start und Breite
-  --rx: 0.38;  --rw: 0.54;    // rechte Seite: Start und Breite
-  --py: 0.04;  --ph: 0.925;   // gemeinsam: Oberkante und Höhe
+  --lx: 0.0671; --lw: 0.3137;  // linke Seite: Start und Breite
+  --rx: 0.4082; --rw: 0.5425;  // rechte Seite: Start und Breite
+  --py: 0.051;  --ph: 0.886;   // beide Seiten: Oberkante und Höhe
 
   position: relative;
   display: block;
-  width: min(100%, 1600px);
+  // so breit wie möglich, aber das ganze Buch muss in die Fensterhöhe passen
+  width: min(100%, 1600px, calc((100svh - 3rem) * 1.738));
   margin-inline: auto;
-  aspect-ratio: 1906 / 825;
+  aspect-ratio: 1460 / 840;
   container-type: inline-size;
-  perspective: 3600px;
+  perspective: 8000px;
+}
+
+// Das Buchbild blendet an allen Rändern weich aus, damit es keine sichtbare Rechteckkante gibt
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: var(--book-img) center / 100% 100% no-repeat;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent), linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+  mask-composite: intersect;
 }
 
 .page {
@@ -28,53 +40,108 @@
   height: calc(var(--ph) * 100%);
   overflow: hidden;
   font-size: clamp(10px, 0.95cqw, 17px); // alle Maße in den Seiten sind em: das Buch skaliert wie ein Bild
-  --nav-space: 4.6em;
+  --nav-space: 4.4em;
 }
 
 .page--left { left: calc(var(--lx) * 100%); width: calc(var(--lw) * 100%); transform-origin: right center; --x: var(--lx); --w: var(--lw); }
 .page--right { left: calc(var(--rx) * 100%); width: calc(var(--rw) * 100%); transform-origin: left center; --x: var(--rx); --w: var(--rw); }
 
-// Startseite: die Seite zeigt den passenden Ausschnitt des Buchbilds
-.page--image {
+// ---------------------------------------------------------------------------
+// Seitenhintergründe (gelten im Buch und in der gestapelten Handyansicht)
+// ---------------------------------------------------------------------------
+[data-bg='book'] {
   background-image: var(--book-img);
   background-repeat: no-repeat;
   background-size: calc(100% / var(--w)) calc(100% / var(--ph));
   background-position: calc(var(--x) / (1 - var(--w)) * 100%) calc(var(--py) / (1 - var(--ph)) * 100%);
 }
 
-// Innenseiten: dunkles Papier mit Schatten zur Buchmitte
-.page--paper { border: 1px solid var(--color-border-cyan); border-radius: 0.5em; }
-.page--left.page--paper {
-  background: linear-gradient(90deg, #0b0f1d, #070a14 70%, #04050a);
-  box-shadow: inset -2em 0 2.4em -1.6em rgba(0, 0, 0, 0.9), inset 0 0 2.4em rgba(0, 240, 255, 0.05);
-}
-.page--right.page--paper {
-  background: linear-gradient(270deg, #0b0f1d, #070a14 70%, #04050a);
-  box-shadow: inset 2em 0 2.4em -1.6em rgba(0, 0, 0, 0.9), inset 0 0 2.4em rgba(255, 0, 255, 0.05);
+// Innenseiten: EIN Bild läuft über beide Seiten. Jede Seite zeigt ihren Teil davon.
+// (--w0 = Breite der ganzen Doppelseite; das Bild hat das Format 1,734 : 1)
+[data-bg='spread-left'], [data-bg='spread-right'] {
+  --w0: calc(var(--rx) + var(--rw) - var(--lx));
+  background-color: #010611;
+  background-image: var(--spread-img);
+  background-repeat: no-repeat;
+  background-size: calc(100% * var(--w0) / var(--w)) 100%;
+  background-position: calc((var(--x) - var(--lx)) / (var(--w0) - var(--w)) * 100%) 50%;
 }
 
+// Abdunklung, damit Texte und Karten gut lesbar bleiben (Stärke über --shade je Doppelseite)
+[data-bg='spread-left']::before, [data-bg='spread-right']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(1, 6, 17, calc(var(--shade, 0.6) * 0.75)), rgba(1, 6, 17, var(--shade, 0.6)));
+}
+
+// Seite ohne Bild (nur in der Handyansicht der Startseite)
+[data-bg='paper'] {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.07), transparent 60%),
+    linear-gradient(180deg, #020917, #010611);
+}
+
+// Schatten zur Buchmitte, damit die Seiten gewölbt wirken
+.page--left::after, .page--right::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.page--left::after { background: linear-gradient(90deg, transparent 80%, rgba(0, 0, 0, 0.55)); }
+.page--right::after { background: linear-gradient(270deg, transparent 80%, rgba(0, 0, 0, 0.55)); }
+
+// ---------------------------------------------------------------------------
 // Blättern
+// ---------------------------------------------------------------------------
 .leaf { z-index: 5; animation-duration: 520ms; animation-fill-mode: both; will-change: transform, filter; }
 .leaf[data-anim='right-lift'] { animation-name: right-lift; animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.7); }
 .leaf[data-anim='left-lift'] { animation-name: left-lift; animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.7); }
 .leaf[data-anim='left-land'] { animation-name: left-land; animation-timing-function: cubic-bezier(0.1, 0.4, 0.3, 1); }
 .leaf[data-anim='right-land'] { animation-name: right-land; animation-timing-function: cubic-bezier(0.1, 0.4, 0.3, 1); }
 
-@keyframes right-lift { from { transform: rotateY(0); filter: brightness(1); } to { transform: rotateY(-90deg); filter: brightness(0.45); } }
-@keyframes left-lift { from { transform: rotateY(0); filter: brightness(1); } to { transform: rotateY(90deg); filter: brightness(0.45); } }
-@keyframes left-land { from { transform: rotateY(90deg); filter: brightness(0.45); } to { transform: rotateY(0); filter: brightness(1); } }
-@keyframes right-land { from { transform: rotateY(-90deg); filter: brightness(0.45); } to { transform: rotateY(0); filter: brightness(1); } }
+@keyframes right-lift { from { transform: rotateY(0); filter: brightness(1); } to { transform: rotateY(-90deg); filter: brightness(0.4); } }
+@keyframes left-lift { from { transform: rotateY(0); filter: brightness(1); } to { transform: rotateY(90deg); filter: brightness(0.4); } }
+@keyframes left-land { from { transform: rotateY(90deg); filter: brightness(0.4); } to { transform: rotateY(0); filter: brightness(1); } }
+@keyframes right-land { from { transform: rotateY(-90deg); filter: brightness(0.4); } to { transform: rotateY(0); filter: brightness(1); } }
 
 // Navigation liegt fest auf der oberen rechten Seite und blättert nicht mit
 .nav-layer {
   position: absolute;
   z-index: 10;
-  top: calc(var(--py) * 100% + 1.6%);
+  top: calc(var(--py) * 100% + 1.2%);
   left: calc(var(--rx) * 100%);
   width: calc(var(--rw) * 100%);
   padding-inline: 3em;
   font-size: clamp(10px, 0.95cqw, 17px);
+  text-shadow: 0 0 0.6em rgba(0, 0, 0, 0.9);
 }
+
+// Blätterpfeile in den unteren Seitenecken
+.turn {
+  position: absolute;
+  z-index: 10;
+  bottom: calc((1 - var(--py) - var(--ph)) * 100% + 1.4%);
+  display: grid;
+  place-items: center;
+  width: 3em;
+  height: 3em;
+  padding: 0;
+  border: 1px solid var(--color-border-cyan);
+  border-radius: 50%;
+  background: rgba(1, 6, 17, 0.7);
+  color: var(--color-cyan);
+  font-size: clamp(10px, 0.95cqw, 17px);
+  cursor: pointer;
+  transition: box-shadow 250ms, background-color 250ms;
+  @include m.focus-ring;
+  &:hover { background: rgba(0, 240, 255, 0.12); box-shadow: var(--glow-cyan); }
+  svg { width: 1.4em; height: 1.4em; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+}
+.turn--prev { left: calc(var(--lx) * 100% + 2%); }
+.turn--next { right: calc((1 - var(--rx) - var(--rw)) * 100% + 2%); }
 
 // ---------------------------------------------------------------------------
 // Schmale Bildschirme: Seiten untereinander, ohne Blättern
@@ -85,32 +152,47 @@
   z-index: 10;
   padding: 0.4rem 0.8rem;
   font-size: 15px;
-  background: rgba(5, 6, 11, 0.92);
+  background: rgba(1, 6, 17, 0.92);
   border-bottom: 1px solid var(--color-border-cyan);
 }
 
-.stack { display: grid; gap: 1rem; margin-top: 1rem; container-type: inline-size; }
+.stack { display: grid; gap: 1rem; margin-top: 1rem; }
 .stack__spread { display: grid; gap: 1rem; scroll-margin-top: 4.5rem; }
+
+// Ab der zweiten Doppelseite: eine gemeinsame Karte, das Bild erscheint nur einmal
+.stack__spread:not([data-spread='0']) {
+  position: relative;
+  padding: 0.5rem 0;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: #010611 var(--spread-img) center / cover no-repeat;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(1, 6, 17, calc(var(--shade, 0.6) * 0.75)), rgba(1, 6, 17, var(--shade, 0.6)));
+  }
+}
 
 .stack__page {
   --nav-space: 0em;
+  --lx: 0.0671; --lw: 0.3137; --py: 0.051; --ph: 0.886; --x: var(--lx); --w: var(--lw);
+  position: relative;
+  z-index: 1;
   min-height: 12em;
   overflow: hidden;
   font-size: 15px;
-  border: 1px solid var(--color-border-cyan);
   border-radius: var(--radius-card);
-  background: linear-gradient(160deg, #0b0f1d, #05060b);
+  background-color: #010611;
 }
 
-// Startseite: das Portrait ist der linke Bildausschnitt
-.stack__page--cover {
-  --lx: 0.086; --lw: 0.284; --py: 0.04; --ph: 0.925; --x: var(--lx); --w: var(--lw);
-  aspect-ratio: 541 / 763;
+.stack__page[data-bg='none'] { min-height: 0; background: none; }
+
+// Startseite: das Portrait liegt auf dem linken Bildausschnitt
+.stack__page[data-bg='book'] {
+  aspect-ratio: 458 / 744;
   max-width: 28em;
-  margin-inline: auto;
   width: 100%;
-  background-image: var(--book-img);
-  background-repeat: no-repeat;
-  background-size: calc(100% / var(--w)) calc(100% / var(--ph));
-  background-position: calc(var(--x) / (1 - var(--w)) * 100%) calc(var(--py) / (1 - var(--ph)) * 100%);
+  margin-inline: auto;
 }

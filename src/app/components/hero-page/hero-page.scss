@@ -5,12 +5,12 @@
 // Der Text bleibt in der linken Spalte, rechts davon liegt der Schreibtisch im Bild
 .hero {
   display: grid;
-  gap: 1em;
   justify-items: start;
-  align-content: center;
+  align-content: start;
+  gap: 0.8em;
   height: 100%;
   max-width: 27em;
-  padding: calc(var(--nav-space, 0em) + 1em) 1.5em 2em 3em;
+  padding: calc(var(--nav-space, 0em) + 0.6em) 1.5em 2em 3em;
 }
 
 .hero__greeting {
@@ -22,7 +22,7 @@
 }
 
 .hero__name {
-  font-size: 4.1em;
+  font-size: 3.6em;
   line-height: 0.95;
   letter-spacing: -0.02em;
   span { display: block; color: var(--color-cyan); }

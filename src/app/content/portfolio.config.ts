@@ -32,8 +32,25 @@ export const PORTFOLIO = {
   intro:
     'Ich entwickle Web-Anwendungen mit Angular, TypeScript und SCSS und setze das Gelernte in eigenen Projekten um.',
 
-  // Das Buch-Bild (Portrait links, Schreibtisch rechts) liegt in public/images
-  bookImage: 'images/book-home.webp',
+  // Bilder liegen in public/images und können dort einzeln ausgetauscht werden
+  bookImage: 'images/book.webp', // das aufgeschlagene Buch (Rahmen, Nebel links, Schreibtisch rechts)
+  // Ein Hintergrundbild pro Doppelseite, das über beide Seiten läuft (Reihenfolge wie die Navigation,
+  // danach die Abschlussseite). Die Startseite nutzt das Buchbild. Ideales Format: 1,734 : 1 (z. B. 1734 x 1000 px).
+  spreadImages: [
+    '',
+    'images/spread-contact.webp', // About
+    'images/spread-contact.webp', // Skills
+    'images/spread-contact.webp', // Projects
+    'images/spread-contact.webp', // Contact
+    'images/spread-thanks.webp', // Danke
+  ],
+  portrait: 'images/profil.webp', // alternativ: 'images/profil-2.webp'
+  portraitAlt: 'Portrait von Marcel Schmitz',
+
+  thanks: {
+    title: 'Danke fürs Besuchen!',
+    text: "Let's build something awesome together.",
+  },
 
   // Reihenfolge = Reihenfolge der Buchseiten (Doppelseiten)
   nav: [

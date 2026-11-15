@@ -36,8 +36,10 @@ const SAFETY_MS = 1600;
 })
 export class PortfolioBook {
   protected readonly bookImage = `url(${PORTFOLIO.bookImage})`;
-  protected readonly labels = PORTFOLIO.nav.map((n) => n.label);
-  protected readonly spreads = PORTFOLIO.nav.map((_, i) => i);
+  // Die Navigation hat 5 Einträge, dahinter folgt als letzte Doppelseite „Danke“
+  protected readonly labels = [...PORTFOLIO.nav.map((n) => n.label), 'Danke'];
+  protected readonly spreads = this.labels.map((_, i) => i);
+  private readonly last = this.labels.length - 1;
 
   protected readonly bookMode = signal(true);
   private readonly current = signal(0);
@@ -46,6 +48,11 @@ export class PortfolioBook {
 
   /** Zielseite für die Navigation (springt sofort, auch während der Animation). */
   protected readonly shown = computed(() => this.turn()?.to ?? this.current());
+
+  /** Aktiver Navigationspunkt; die Abschlussseite zählt noch zu „Contact“. */
+  protected readonly navActive = computed(() => Math.min(this.shown(), PORTFOLIO.nav.length - 1));
+  protected readonly canPrev = computed(() => this.shown() > 0);
+  protected readonly canNext = computed(() => this.shown() < this.last);
 
   protected readonly leftBase = computed(() => {
     const t = this.turn();
@@ -83,13 +90,34 @@ export class PortfolioBook {
     destroyRef.onDestroy(() => mq.removeEventListener('change', onChange));
   }
 
+  /** Bild der Doppelseite (läuft über beide Seiten); die Startseite nutzt das Buchbild. */
+  protected spreadImage(spread: number): string | null {
+    const file = PORTFOLIO.spreadImages[spread];
+    return file ? `url(${file})` : null;
+  }
+
+  /** Die Abschlussseite bekommt weniger Abdunklung als die Seiten mit Inhalt. */
+  protected spreadShade(spread: number): number {
+    return spread === this.last ? 0.22 : 0.62;
+  }
+
+  /** Welcher Hintergrund zu welcher Buchseite gehört (siehe `data-bg` im Stylesheet). */
+  protected bg(spread: number, side: 'left' | 'right', stacked = false): string {
+    if (spread === 0) return side === 'left' ? 'book' : stacked ? 'paper' : 'book';
+    return stacked ? 'none' : `spread-${side}`;
+  }
+
+  protected step(delta: number): void {
+    this.goTo(this.shown() + delta);
+  }
+
   protected goTo(index: number): void {
     if (!this.bookMode()) {
       document.getElementById(`spread-${index}`)?.scrollIntoView();
       return;
     }
     const from = this.current();
-    if (this.turn() || index === from) return;
+    if (index < 0 || index > this.last || this.turn() || index === from) return;
     this.turn.set({ dir: index > from ? 'fwd' : 'back', from, to: index, phase: 1 });
     // Sicherheitsnetz, falls ein Browser das animationend-Ereignis nicht liefert
     this.timer = setTimeout(() => this.finish(), SAFETY_MS);
@@ -116,6 +144,6 @@ export class PortfolioBook {
     const tag = (event.target as HTMLElement | null)?.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
     const next = this.shown() + (event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0);
-    if (next !== this.shown() && next >= 0 && next < this.spreads.length) this.goTo(next);
+    if (next !== this.shown()) this.goTo(next);
   }
 }
